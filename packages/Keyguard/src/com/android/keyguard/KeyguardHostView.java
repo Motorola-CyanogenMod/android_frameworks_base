@@ -61,6 +61,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewStub;
 import android.view.WindowManager;
+import android.view.WindowManagerPolicy;
 import android.widget.RemoteViews.OnClickHandler;
 
 import java.io.File;
@@ -312,6 +313,14 @@ public class KeyguardHostView extends KeyguardViewBase {
                     if (DEBUGXPORT) Log.v(TAG, "update widget: play state changed");
                     KeyguardHostView.this.post(mSwitchPageRunnable);
                 }
+            }
+        }
+        @Override
+        public void onLidStateChanged(int newState){
+            //when lid goes open and no security is set -> unlock device
+            if(newState == WindowManagerPolicy.WindowManagerFuncs.LID_OPEN
+                && mCurrentSecuritySelection == SecurityMode.None){
+                dismiss();
             }
         }
     };
@@ -989,6 +998,12 @@ public class KeyguardHostView extends KeyguardViewBase {
                 ViewStub vStub = (ViewStub) (v.findViewById(R.id.stub_msim_carrier_text));
                 if (vStub != null) {
                     vStub.inflate();
+
+                    // Remove the non-MSim carrier text
+                    View carrierText = v.findViewById(R.id.carrier_text);
+                    if (carrierText != null) {
+                        ((EmergencyCarrierArea) carrierText.getParent()).removeView(carrierText);
+                    }
                 }
             }
             mSecurityViewContainer.addView(v);
